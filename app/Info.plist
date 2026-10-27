@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>Superclean Dreammachine</string>
+	<key>CFBundleDisplayName</key>
+	<string>Superclean Dreammachine</string>
+	<key>CFBundleIdentifier</key>
+	<string>be.bamati.superclean-dreammachine</string>
+	<key>CFBundleExecutable</key>
+	<string>SupercleanDreammachine</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.2</string>
+	<key>CFBundleVersion</key>
+	<string>3</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>12.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.music</string>
+	<!-- Pad naar de projectmap met hans-prisma-shuffle.html; door build.sh ingevuld. -->
+	<key>HPSProjectDir</key>
+	<string>__HPS_PROJECT_DIR__</string>
+</dict>
+</plist>

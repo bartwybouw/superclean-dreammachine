@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Superclean Dreammachine Shuffle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono&display=swap">
+<style>
+/* Eén kolom: speler bovenaan, archief eronder. Nachtelijke, elektronische sfeer. */
+:root{
+  --bg:#0f0e16; --panel:#1a1826; --line:#2c2940; --fg:#ece8f6; --muted:#9a94b3;
+  --accent:#c8a6ff; --accent2:#7fe0d0;
+  --display:"Syne",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--body)}
+.wrap{max-width:820px;margin:0 auto;padding:32px max(16px,env(safe-area-inset-left)) 48px max(16px,env(safe-area-inset-right));display:flex;flex-direction:column;gap:28px}
+header{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+header img{width:160px;height:160px;object-fit:cover;border-radius:12px;border:1px solid var(--line);flex:none;max-width:100%}
+header .txt{flex:1;min-width:220px}
+header h1{font:800 clamp(28px,6vw,44px)/1.05 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted)}
+.player{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.now{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.now .label{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent2)}
+.now .title{font:600 20px var(--display);margin-top:2px}
+.now .meta{font:13px var(--mono);color:var(--muted)}
+#frame{width:100%;height:120px;border:0;border-radius:8px;background:#000}
+.empty{height:120px;border:1px dashed var(--line);border-radius:8px;display:grid;place-items:center;color:var(--muted);text-align:center;padding:12px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{font:500 14px var(--body);border-radius:999px;padding:10px 18px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--fg)}
+button.primary{background:var(--accent);color:#16121f;border-color:var(--accent);font-weight:600}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+label.chk{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:14px}
+.vol{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:14px}
+.vol input{width:120px;accent-color:var(--accent)}
+.vol span{font:12px var(--mono);min-width:34px;font-variant-numeric:tabular-nums}
+.stats{margin-left:auto;font:13px var(--mono);color:var(--muted)}
+.list > summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.list > summary::-webkit-details-marker{display:none}
+.list > summary::before{content:"\25B8";color:var(--accent2);transition:transform .15s}
+.list[open] > summary::before{transform:rotate(90deg)}
+.list > summary h2{margin:0!important}
+.list h2{font:600 16px var(--display);margin:0 0 10px}
+.filter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.filter input[type=search]{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:9px 12px;font:14px var(--body)}
+ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+li{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+li:hover{background:var(--panel)}
+li .t{flex:1;min-width:0}
+li .d{font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+li.played .t{color:var(--muted)}
+li .dot{width:8px;height:8px;border-radius:50%;background:var(--line);flex:none}
+li.played .dot{background:var(--accent2)}
+li.current{background:var(--panel)} li.current .dot{background:var(--accent)}
+.track{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:8px}
+.track .label{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent2)}
+.track .artist{font:600 18px var(--display)}
+.track .songs{display:flex;flex-wrap:wrap;gap:8px}
+.track .album{color:var(--muted);font-size:13px}
+a.sp{display:inline-flex;align-items:center;gap:6px;font:500 13px var(--body);color:var(--fg);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+a.sp:hover{border-color:#1ed760}
+a.sp::before{content:"";width:8px;height:8px;border-radius:50%;background:#1ed760}
+button.star{padding:5px 10px;font-size:13px}
+button.star.on{border-color:var(--accent);color:var(--accent)}
+.muted{color:var(--muted);font-size:14px}
+.tl{border-top:1px solid var(--line);padding-top:12px}
+.tl summary{cursor:pointer;color:var(--muted);font-size:14px}
+.tl ol{list-style:none;margin:10px 0 0;padding:0}
+.tl li{cursor:default;padding:7px 4px;gap:10px;flex-wrap:wrap}
+.tl li.cur{background:#241f36}
+.tl .tm{font:12px var(--mono);color:var(--accent2);background:none;border:0;padding:0;border-radius:0;min-width:56px;text-align:left;font-variant-numeric:tabular-nums}
+.tl .tm:hover{text-decoration:underline}
+.tl .tx{flex:1;min-width:0}
+.tl .tx b{font-weight:500}
+.saved h2,.pl h2{font:600 16px var(--display);margin:0 0 10px}
+.saved ul li{cursor:default;flex-wrap:wrap}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:9px 12px;font:14px var(--body)}
+a.btn{font:500 14px var(--body);border-radius:999px;padding:10px 18px;border:1px solid var(--line);color:var(--fg);text-decoration:none}
+a.btn:hover{border-color:#1ed760}
+a.btn.off{opacity:.45;cursor:not-allowed}
+.vtag{font:12px var(--mono);color:var(--muted);opacity:.7;margin-left:4px}
+.status{color:var(--muted)}
+.ver{font:11px var(--mono);color:var(--line);text-align:right}
+@media (prefers-reduced-motion:no-preference){button{transition:border-color .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="https://thumbnailer.mixcloud.com/unsafe/600x600/profile/2/4/4/2/4af2-6368-4410-9710-607e92f9e29c" alt="De synthesizerstudio van Hans Prisma">
+    <div class="txt">
+    <h1>Superclean Dreammachine</h1>
+    <p>Hans Prisma &middot; het volledige archief van Mixcloud, in willekeurige volgorde. <span class="vtag">v2.0</span></p>
+    </div>
+  </header>
+
+  <section class="player" aria-label="Speler">
+    <div class="now">
+      <div><div class="label">Nu</div><div class="title" id="nowTitle">Nog niets gekozen</div></div>
+      <div class="meta" id="nowMeta"></div>
+    </div>
+    <div id="slot"><div class="empty">Druk op &ldquo;Willekeurige show&rdquo; om te starten.</div></div>
+    <div class="controls">
+      <button class="primary" id="shuffleBtn">Willekeurige show</button>
+      <button id="openBtn" hidden>Open op Mixcloud</button>
+      <a class="btn" id="spBtn" href="#" target="_blank" rel="noopener" hidden title="Opent het nummer dat nu speelt in Spotify; voeg het daar toe aan je playlist">Voeg toe in Spotify</a>
+      <label class="chk"><input type="checkbox" id="autoNext" checked> Daarna automatisch verder</label>
+      <label class="vol" for="vol">Volume <input type="range" id="vol" min="0" max="100" step="1" value="80"><span id="volVal">80%</span></label>
+      <span class="stats" id="stats"></span>
+    </div>
+    <div class="track" id="trackBox" hidden>
+      <div class="label" id="trackLabel">Speelt nu</div>
+      <div id="trackBody"></div>
+    </div>
+    <details class="tl" id="tlBox" hidden>
+      <summary id="tlSummary">Tracklist</summary>
+      <ol id="tlList"></ol>
+    </details>
+  </section>
+
+  <section class="saved">
+    <h2>Bewaarde nummers</h2>
+    <p class="muted" id="savedEmpty">Klik op &#9734; bij een nummer om het hier te bewaren. Elke regel heeft een Spotify-link om het nummer aan je playlist toe te voegen.</p>
+    <ul id="savedList"></ul>
+    <div class="row" style="margin-top:10px">
+      <button id="copySaved">Kopieer lijst</button>
+      <button id="clearSaved">Wis lijst</button>
+      <span class="muted" id="copyMsg"></span>
+    </div>
+  </section>
+
+
+  <details class="list" id="listBox">
+    <summary><h2>Alle shows <span class="muted" id="listCount"></span></h2></summary>
+    <div class="filter">
+      <input type="search" id="q" placeholder="Zoek, bv. 2020 of week 12">
+      <button id="resetBtn" title="Wist welke shows als beluisterd gemarkeerd staan">Reset beluisterd</button>
+    </div>
+    <p class="status" id="status">Lijst laden van Mixcloud&hellip;</p>
+    <ul id="list"></ul>
+  </details>
+</div>
+
+<script src="https://widget.mixcloud.com/media/js/widgetApi.js"></script>
+<script>
+const USER = 'hans-prisma';
+const KEY = 'hp-shuffle-played';
+let shows = [], current = null, widget = null;
+let played = new Set();
+try { played = new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch(e){}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...played])); } catch(e){} };
+const $ = id => document.getElementById(id);
+const hm = s => Math.floor(s/3600)+'u'+String(Math.round(s%3600/60)).padStart(2,'0');
+
+// Mixcloud API via JSONP (werkt ook als lokaal bestand)
+let cbN = 0;
+function jsonp(url){
+  return new Promise((res, rej) => {
+    const name = '__mc' + (cbN++);
+    const s = document.createElement('script');
+    window[name] = d => { delete window[name]; s.remove(); res(d); };
+    s.onerror = () => { delete window[name]; s.remove(); rej(new Error('laden mislukt')); };
+    s.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + name;
+    document.head.appendChild(s);
+  });
+}
+async function load(){
+  let url = `https://api.mixcloud.com/${USER}/cloudcasts/?limit=100`;
+  try {
+    while (url) {
+      const j = await jsonp(url);
+      j.data.forEach(c => shows.push({ key:c.key, name:c.name, date:c.created_time.slice(0,10), len:c.audio_length||0, url:c.url }));
+      url = j.paging && j.paging.next;
+    }
+    $('status').hidden = true;
+    render(); stats();
+    let r=null; try{ r=JSON.parse(localStorage.getItem(RESUME_KEY)||'null'); }catch(e){}
+    const rs = r && shows.find(x=>x.key===r.key);
+    if (rs) { play(rs, r.pos); $('nowMeta').textContent = `${rs.date} · ${hm(rs.len)} · hervat op ${fmt(r.pos)}`; }
+  } catch(e) {
+    $('status').textContent = 'De lijst kon niet geladen worden. Controleer je internetverbinding en herlaad de pagina.';
+  }
+}
+
+function render(){
+  const q = $('q').value.trim().toLowerCase();
+  const ul = $('list'); ul.innerHTML = '';
+  shows.filter(s => !q || (s.name+' '+s.date).toLowerCase().includes(q)).forEach(s => {
+    const li = document.createElement('li');
+    if (played.has(s.key)) li.classList.add('played');
+    if (current && current.key === s.key) li.classList.add('current');
+    li.innerHTML = `<span class="dot"></span><span class="t"></span><span class="d">${s.date} · ${hm(s.len)}</span>`;
+    li.querySelector('.t').textContent = s.name;
+    li.onclick = () => play(s);
+    ul.appendChild(li);
+  });
+}
+function stats(){ $('listCount').textContent = '('+shows.length+')'; $('stats').textContent = `${[...played].filter(k=>shows.some(s=>s.key===k)).length} / ${shows.length} beluisterd`; }
+
+function pickRandom(){
+  let pool = shows.filter(s => !played.has(s.key) && (!current || s.key !== current.key));
+  if (!pool.length) { played.clear(); save(); pool = shows.filter(s => !current || s.key !== current.key); }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+const RESUME_KEY='hp-shuffle-resume';
+let pendingSeek=0;
+function play(s, startAt){
+  if (!s) return;
+  pendingSeek = startAt>5 ? startAt : 0;
+  current = s; played.add(s.key); save();
+  $('nowTitle').textContent = s.name;
+  $('nowMeta').textContent = `${s.date} · ${hm(s.len)}`;
+  $('openBtn').hidden = false;
+  const f = document.createElement('iframe');
+  f.id = 'frame'; f.allow = 'autoplay';
+  f.src = `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&autoplay=1&feed=${encodeURIComponent(s.key)}`;
+  $('slot').innerHTML = ''; $('slot').appendChild(f);
+  widget = null;
+  if (window.Mixcloud) {
+    widget = Mixcloud.PlayerWidget(f);
+    const w = widget;
+    w.ready.then(async () => {
+      // Hervatten: een seek vóór het afspelen wordt door Mixcloud genegeerd,
+      // dus springen we pas zodra de show echt speelt.
+      let playing=false, seeking=false;
+      w.events.play.on(() => { playing=true; });
+      w.events.pause.on(() => { playing=false; });
+      w.events.progress.on(async p => {
+        if (w!==widget || !pendingSeek || !playing) return;
+        if (p >= pendingSeek-5) { pendingSeek=0; return; }
+        if (!seeking && p>0.3) { seeking=true; try{ await w.seek(pendingSeek); }catch(e){} setTimeout(()=>seeking=false,1500); }
+      });
+      w.events.ended.on(() => { try{localStorage.removeItem(RESUME_KEY)}catch(e){}; if ($('autoNext').checked) play(pickRandom()); });
+      applyVolume(w);
+      w.play();
+    });
+  }
+  render(); stats();
+  loadTracklist(s); startPos();
+}
+
+$('shuffleBtn').onclick = () => play(pickRandom());
+$('openBtn').onclick = () => current && window.open(current.url, '_blank');
+$('q').oninput = render;
+$('resetBtn').onclick = () => { played.clear(); save(); render(); stats(); };
+function toSec(s){const p=s.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];}
+function clean(s){return (s||'').replace(/\s+/g,' ').trim();}
+function stripParen(s){return clean((s||'').replace(/\([^()]*\)/g,' ').replace(/\[[^\]]*\]/g,' '));}
+function titleCaseIfUpper(s){ if(s && s===s.toUpperCase() && /[A-Z]/.test(s)) return s.toLowerCase().replace(/(^|[\s\-&\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase()); return s; }
+const DASH=/\s+[-–—]\s+/;
+function splitAlbum(s){const m=s.match(/^(.*?)\s*\(([^()]*)\)\s*$/);return m?[clean(m[1]),clean(m[2])]:[clean(s),''];}
+function parseTrackText(rest, lastArtist){
+  // returns {artist,title,album}
+  let artist='', title='', album='';
+  let body=rest;
+  const colon=body.match(/^([^:]{2,80}?)\s*:\s+(.+)$/);
+  if(colon && !/^\d/.test(colon[1])){ artist=colon[1]; [title,album]=splitAlbum(colon[2]); }
+  else if(DASH.test(body)){ const i=body.search(DASH); const a=body.slice(0,i), b=body.slice(i).replace(DASH,'');
+    // if first part looks like an artist (uppercase or followed by more text)
+    artist=a; [title,album]=splitAlbum(b); }
+  else { [title,album]=splitAlbum(body); artist=lastArtist||''; }
+  return {artist:clean(artist), title:clean(title), album:clean(album)};
+}
+function parseComment(text){
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const timed=[], numbered=[]; let lastArtist='';
+  const TS=/^(\d{1,2}:\d{2}(?::\d{2})?)\s*(?:[-–—:.]\s*)?(.+)$/;
+  const NUM=/^\d{1,3}\s*[\.\)]\s*(.+)$/;
+  for(const l of lines){
+    let m=l.match(TS);
+    if(m && !/^https?:/i.test(m[2])){
+      const it=parseTrackText(m[2], lastArtist);
+      if(it.artist && it.artist!==lastArtist && (/[A-Z]{3}/.test(it.artist))) lastArtist=it.artist;
+      else if(it.artist) lastArtist = lastArtist || it.artist;
+      timed.push({t:toSec(m[1]), ...it, raw:m[2]});
+      continue;
+    }
+    m=l.match(NUM);
+    if(m && DASH.test(m[1])){ const it=parseTrackText(m[1],''); numbered.push({t:null,...it,raw:m[1]}); continue; }
+    // header line like "ARTIST - Album (2020)" sets context artist
+    if(DASH.test(l) && !/^https?:/i.test(l)){ const a=l.split(DASH)[0]; if(a===a.toUpperCase() && /[A-Z]{3}/.test(a) && a.length<80) lastArtist=clean(a); }
+    else if(l===l.toUpperCase() && /[A-Z]{3}/.test(l) && l.length<60 && !/SUPERCLEAN/.test(l)) lastArtist=clean(stripParen(l));
+  }
+  if(timed.length>=3) return {timed:true, items:timed.sort((a,b)=>a.t-b.t)};
+  if(numbered.length>=3) return {timed:false, items:numbered};
+  return null;
+}
+function bestTracklist(comments){
+  let best=null;
+  for(const c of comments){const p=parseComment(c.comment||c.t||''); if(!p) continue;
+    const score=(p.timed?1000:0)+p.items.length;
+    if(!best||score>best.score) best={...p,score,by:(c.user&&c.user.username)||c.u};}
+  return best;
+}
+function spotifyQuery(it){
+  const a=stripParen(it.artist).replace(/\s*&\s*/g,' ');
+  const firstTitle=stripParen((it.title||'').split(/\s*,\s*/)[0]);
+  return clean(titleCaseIfUpper(a)+' '+firstTitle);
+}
+
+// ---------- tracklist, nu-spelend, bewaren ----------
+// Opgehaald op 2026-10-26 uit de Facebook-groep (posts van Hans Prisma).
+const FB_TRACKLISTS={"/hans-prisma/superclean-dreammachine-week-13-2022/": ["Eric G – Metamorphosis", "Rainbow Serpent – Believe", "Rainbow Serpent – Silent Running", "Fritz Mayr – Gas Gaint", "Fritz Mayr – Cryosleep Transit", "Guy- Lian – Mercury I", "Guy- Lian – Mars IV", "Robert Schroeder – Daydreamer", "Robert Schroeder – A Spiritual Journey", "Robert Schroeder – Delighted Experience", "Lars Tuchel – Neorooly", "Lars Tuchel – Timeflyer", "Ron Boots – 59-59", "Johan Tronestam – Awakenings", "Johan Tronestam – Artificial Intelligence", "Johan Tronestam – Equality", "Tangerine Dream – Scrap Yard"], "/hans-prisma/superclean-dreammachine-week-4-2022/": ["Alluste – Skyline Runner", "Alluste – Angelic Steps", "Gert Emmens – On the Edge of Nowhere", "Gert Emmens – Overlooked Consequences of Near-Death Experiences", "Edgar Froese – Daleroshima", "Edgar Froese – Daluminacion", "Sayer – On Being Human", "Sayer – Essence", "Sequential Dreams – Connected Spaces", "Sequential Dreams – Lightwave Rider", "Klaus Schulze – Mindphaser", "Mac of BIOnighT – ORANGE WAVES", "Mac of BIOnighT – ESTERNO", "Hollan Holmes – Hydroelectric", "Hollan Holmes – Taken by the Current", "F.D.Project - The Other Side Of...2020 Part Three", "F.D.Project - The Other Side Of...2020 Part Four"], "/hans-prisma/superclean-dreammachine-week-3-2022/": ["UNISphere – Le Temps Retrouve", "UNISphere – Post Meridian 11-35 pm", "BRAINWORK – Late in Berlin", "BRAINWORK – Roll in", "WAVE WALKERS – KRONOS Part 2", "Gert Emmens & Ruud Heij – Urban Decay Part 4", "Gert Emmens & Ruud Heij – Urban Decay Part 5", "Romerium & Thaneco – Dramatic Discoveries", "Romerium & Thaneco – Invisible Particle", "MiDi BiTCH – Geradeaus bis zum Morgen", "MiDi BiTCH – Augenblick und Ewigkeit", "Joerg Dankert – Fears Are Dimming Light", "Joerg Dankert –  Moving In Right Direction", "Dave Bessell and Liam Boyle – The Future Belongs to Dreamers", "Dave Bessell and Liam Boyle – The Deconstruction of the Old World", "Embrase – 2020", "Embrase – New Phase", "James Clent – Jadranska Magistrala", "James Clent – Ocean Floor"], "/hans-prisma/superclean-dreammachine-week-41-2021/": ["George Link – Technology Part 6", "Ian Boddy – From Here To There", "Ian Boddy – Nevermore", "Ron Boots – Twisted Tales", "Ron Boots – The Call", "Aythar – Dive Into The ElectrOcean", "Aythar – Protoplasm", "Tangerine Dream – Gaudi Park (Guell Garden Barcelona)", "Tangerine Dream – The Cliffs Of Sydney (Sydney)", "Tangerine Dream – Yellowstone Park (Rocky Mountains)", "Stellaterra – Vector Field", "Stellaterra – Quantum State", "Stellaterra – Temporal Dimensions", "Steen Chorchendorff Jorgensen – Valley of Morning Jewel", "Steen Chorchendorff Jorgensen – It Comes From Within When The Day Begins", "Fritz Mayr – Asteria Colony", "Software – Stranger", "Software – Realtime"], "/hans-prisma/superclean-dreammachine-week-40-2021/": ["Kebu – Discovering Utopia", "Kebu – Free From The Pain", "Kebu – Late For The Meeting In The Maze", "Boris S.G – Memories of Tangerine Color", "Boris S.G – Tangerine Color Planet", "Gert Emmens – The Shelter in Sector 5", "Gert Emmens – When Twilight Announces the Night to Come", "Coral Cave – The Last Dolphin Part 2", "Coral Cave – Electronic Variety", "Thaneco – Sirens", "Thaneco – Cattle of Helios", "Volt – The Far Canal Part 3", "Dream Quest – Stars", "Dream Quest – Rainbow", "Sacha Gibson – Between Part 2", "Sacha Gibson – Between Part 4", "Nord – Pictures From a Distorted Mirror Part 1", "Nord – Pictures From a Distorted Mirror Part 6"], "/hans-prisma/superclean-dreammachine-week-39-2021/": ["Vangelis – In the Magic of Cosmos", "Vangelis – Juno's Echoes", "Vangelis – Jupiter's Veil of Clouds", "Martin Peters – Particles", "Martin Peters – The Wasp", "Beyond Berlin – Far Beyond", "Beyond Berlin – Freak Mout", "Rene de Bakker – Dive in Part 1", "Rene de Bakker – Dive in - Dive out", "Däcker – Female Figure", "Däcker – The Elephant", "Alluste – Wave Runner", "Alluste – Je Suis Paris", "Extraworld – Thermal Horizon", "Extraworld – Singularity Beneath", "Jasper De Ceuster – Fusion", "Jasper De Ceuster – Origins", "The Amnis Initiative – Singularity", "The Amnis Initiative – Hunted", "The Amnis Initiative – Crossroads"], "/hans-prisma/superclean-dreammachine-week-38-2021/": ["Sequentia Legenda – VOICES 55 (Revisited Version)", "Picture Palace Music – Drowing Moon And Eleven Suns", "Picture Palace Music – Moon Dial", "Thomas Fanger – Vanilla Crush", "Thomas Fanger – The Land Of Milk And Honey", "Mac of BIOnighT – Ephemeral Phenomena Part 3", "Mac of BIOnighT – Ephemeral Phenomena Part 4", "Sequentia Legenda – Symphonic Dawn of the Stars", "Offermouse – Det Sorte Skib", "Offermouse – Bag De Hvide Tinder", "Offermouse – Et Kald Fra Det Hinsides", "F.D. Project – Quadea ... Part One", "F.D. Project – Quadea ... Part Four", "Berlin Heritage – Welcome to the New"], "/hans-prisma/superclean-dreammachine-week-37-2021/": ["Sophos – Oceanides", "Sophos – Wild Water", "Kubusschnitt (as Penterakt) – Meteor Strikes Again", "Kubusschnitt (as Penterakt) – Life On The Moon", "Johan Tronestam – Borderland", "Johan Tronestam – Terra Nova", "Tilo Voigthaus – Tunnellight", "Tilo Voigthaus – Analog Memories", "Tilo Voigthaus – Night Traffic", "Redshift – Midnight Clear Minus", "Blindmachine & Friends – Floating Space", "Blindmachine & Friends – Remembering Klaus", "ARC – Rise", "Navigator – Secret of the Cave", "Navigator – Mist of Ganymede", "Arcane Live @ E-day 2017 – Philae", "Arcane Live @ E-day 2017 – Cloud Surfer"], "/hans-prisma/superclean-dreammachine-week-36-2021/": ["The Amnis Initiative – Ejection", "The Amnis Initiative – Reunited", "Sequentia Legenda – The Return", "Sacha Gibson - Requiem For A Star Part 1", "Sacha Gibson - Requiem For A Star Part 3", "Tangerine Dream – Tangram (Set 1 - Remastered 2020)", "Smallchief – Hotter than the Sun", "Smallchief – Oh Be A Fine Girl Kiss Me", "Transponder – Atlas", "Transponder – Aegis", "Seifert&Steinbuechel – Mercury Mission", "Seifert&Steinbuechel – ISS Mission", "Jim Ottaway – Beyond Space And Time", "Jim Ottaway – Infinite Space", "Lambert Ringlage – Stairs", "Lambert Ringlage – Drachenreise", "GROBEK – Elements", "GROBEK – Polarity"], "/hans-prisma/superclean-dreammachine-week-35-2021/": ["Awenson – Lovedance", "Awenson – Running", "Axess – Earth Shine", "Axess – Steam Part 1 & 2", "Rodrigo Passannanti – Cosmic Memory", "Rodrigo Passannanti – Once in a Lifetime", "Craig Padilla & Marvin Allen – The Revelation", "Craig Padilla & Marvin Allen – All Around Us", "Synth replicants – Atlantis", "Synth replicants – Water and Ice", "Sayer – Neuroreality", "Sayer – Synaptic Flow", "Free System Project – The Nightmare", "Free System Project – The Case", "Free System Project – The Opening", "Fratoroler – Different", "Lamp – Adversity"], "/hans-prisma/superclean-dreammachine-week-34-2021/": ["Ron Boots – 59-59", "Gert Emmens – Wanderer of Time Part 2", "Ron Boots and Gert Emmens – 02-17 AM", "Beyond Berlin – Reconciliation", "Adeptus Mechanicus – Progression", "Adeptus Mechanicus – Forward In Reverse", "Akikaze – Solstice – Jacob's Ladders", "Akikaze – Northern Light", "Eagle (Synth. Music) – Spectrum of Possibilities  Live @ ESE 2018", "Eagle (Synth. Music) – The Superclean Dreammachine  Live @ ESE 2018", "Eric Van Der Heijden – Rule of Threes", "Eric Van Der Heijden – Tritonic Waves"], "/hans-prisma/superclean-dreammachine-week-33-2021/": ["Arno – September Rain", "Arno – Seagull's Flight", "MICADO – Emotional Sequence", "MICADO – Emotional Senselessly", "Synth replicants – Love from a Distance", "Synth replicants – The Day Earth Died", "Synth replicants – Dreamers Dream", "James Clent – Fighing In Bermuda", "James Clent – Antigua Regatta", "James Clent – Crossing the Equator", "Wave Walkers – Kronos 21 Part 1", "Network 23 – Buddhist Dude", "Network 23 – Delia", "Eloy Fritsch – Gravitational Force", "Eloy Fritsch – Spacetime", "Eloy Fritsch – Droids", "John Christian – Occam's Razor", "John Christian – Glis Glis", "Beyond Our Galaxy – The Rubicon Moment", "Beyond Our Galaxy – As The Sun Slowly Sets", "Alluste –  Purpoise Dreams", "Alluste – Broken Multisphere"], "/hans-prisma/superclean-dreammachine-week-32-2021/": ["Wave Walkers – Kronos 21 Part 2", "Sayer – False Memories", "Sayer – Neural Highway", "Sayer – Sensory Stimuli", "Jim Ottaway – Alien Star", "Jim Ottaway – Threshold Of The Universe", "Totemtag – Yuma Desert", "Totemtag – UAP Highway", "Fritz Mayr – Passing Comet", "Fritz Mayr – Homecoming", "Baldocaster-Traveler CS – Genesis", "Baldocaster-Traveler CS – Runner", "Baldocaster-Traveler CS – Map to the Stars Part 1", "Fanger & Schönwälder feat. Lutz Graf-Ulbrich – Tränenpalast", "Fanger & Schönwälder feat. Lutz Graf-Ulbrich – Nachtbus", "Fanger & Schönwälder feat. Lutz Graf-Ulbrich – Entlastungsstrasse", "Battery Dead – This One Place", "Battery Dead – Endless Restlessness", "Steve Smith and the Tylas Cyndrome – Somewhere Out There", "Steve Smith and the Tylas Cyndrome – Phoenix Arising"], "/hans-prisma/superclean-dreammachine-week-31-2021/": ["Klaus Schulze – Minority Report", "Klaus Schulze – Mongolia", "Thorsten Quaeschning – Blauer Horizont, Blaues Meer", "Thorsten Quaeschning – Nieselregentropfen", "Thorsten Quaeschning – Den ganzen Tag – Schönwetterwolken", "Perge – Cyclical", "Perge – Too Late", "Andrew J Douglas – Memory Processing", "Andrew J Douglas – New Alpha Dream", "Michael Brückner – A Question of Re-Entry", "Michael Brückner – The Recirculation Chambers", "Ken Martin – Aeolis Palus Part 2", "Uwe Reckzeh – Moments In Space", "Uwe Reckzeh – Be Sequenced", "Eric Snelders – Fast Clouds Over Delicate Arch", "Eric Snelders – Running Through An Inifinite Night"], "/hans-prisma/superclean-dreammachine-week-30-2021/": ["Spyra – Dunst", "Spyra – Tangible", "Michael Brückner – Seen From A Thousand Miles", "Michael Brückner – Votre Coeur", "Fanger & Kersten – Interkosmos", "Fanger & Kersten – Nightshift", "Alluste – Fundamental Symmetries", "Alluste – Runchana Theme", "Alluste – Time Crystal", "Polaris – Takeoff", "Polaris – A Way Back", "Ralph Wadephul- 1st Sunlight", "Ralph Wadephul – Into The Thunder", "Ralph Wadephul – Paradise Island", "Stefan Erbe – Sound Of Sky", "Stefan Erbe – Sound Of Stars", "Stefan Erbe – Nostromo", "Sayer – Airwave", "Sayer – Light Years", "AEM – Journey To The Star", "AEM – Heinrich's Observation", "Stellardrone – Eternity", "Stellardrone – Light Years"], "/hans-prisma/superclean-dreammachine-week-27-2021/": ["Andy Pickford – Don’t Look Now", "Andy Pickford – Phoenix Rising", "Andy Pickford – Horizon", "Ash Ra Tempel – Pikant", "Fritz Mayr – From the Ashes", "Fritz Mayr – Dead Plains", "Georg Link – Technology Part 2", "Michael Brückner – Round and Round", "Michael Brückner –  Loop Velocity", "René van der Wouden – Astromen", "René van der Wouden – Gravitational Attraction", "Dreamstate Logic – Divine Nexus", "Dreamstate Logic – Space Born", "AirSculpture – Europa Part 2", "AirSculpture – Europa Part 5", "Axess & Maxxess – Breathe", "Axess & Maxxess – Impact"], "/hans-prisma/superclean-dreammachine-week-3-20121/": ["David Helpling & Jon Jenkins – Sun Racer", "David Helpling & Jon Jenkins – Trough Tears", "David Helpling & Jon Jenkins  – Lost", "Wavestar II – Track of Time", "Wavestar II – The Velocity of Dark", "Traumklang – Hydrogen", "Traumklang – Silicate", "Boris SG – Neon Flow", "Boris GS – Star Brilliance", "Gybernaum –  Volt", "Free System Projekt – Altared States", "Free System Project – In the Ocean of Tethys", "Galaxy – Everlasting Tone", "Galaxy – Wavemode", "Johan Tronestam – Orion", "Johan Tronestam – Perpetuity", "Tangerine Dream – Food for the Gods", "Tangerine Dream – Blue Dawn"], "/hans-prisma/superclean-dreammachine-week-51-2020/": ["ORBIFOLD C – Apeiron", "ORBIFOLD C – Image Of Introspection Part 1", "ORBIFOLD C – Image Of Introspection Part 2", "Andrey Klimkovsky – Aethereal Fields Part 5", "Colin Rayment – Skimming Time", "Max van Richter – Resurrection", "Max van Richter – The City of Waking Hallucinations", "Strange Telemetry – The Expanding Mind Part 1", "Vangelis – Out in Space", "Vangelis – Juno's Power", "Vangelis – Jupiter's Veil of Clouds", "Wolfgang Nachahmer – Hermes", "Wolfgang Nachahmer – Monotaur", "Waveshape – Plasma", "Waveshape – Chromosphäre"], "/hans-prisma/superclean-dreammachine-week-43-2020/": ["Stefan Erbe – Aeronautica", "Stefan Erbe – Life", "Stefan Erbe – Bright Like a Silver Star", "Bryan EL – Nirvana", "Bryan EL – Voyager", "Bryan EL – Transcendence", "Cybernaum – Pulsar", "Cybernaum – Colors of Sound", "Cybernaum – Gravitation", "René Splinter – Singularities", "René Splinter – Lemniscate", "Rainbow Serpent – Jodrell Bank Mark I", "Rainbow Serpent – Jodrell Bank Mark II", "Stellaterra – Deep Space Journey", "Stellaterra – Suspended Animation", "Stellaterra – Star Gazer", "Sayer – Eagle's Flight", "Sayer – Snowfall", "Sayer – Highlands", "Erez Yaary – Memoria Technica", "Erez Yaary – Algo Rhythmus", "Erez Yaary – Carbon Black", "Madis – Carrying the Fire", "Madis – Moondust Part II", "Thaneco – The Lotus Eaters", "Thaneco – Ismaros", "Gert Emmens – Outlands"], "/hans-prisma/superclean-dreammachine-week-41-2020/": ["Patrick Gleeson - Rainbow Delta", "Wellenfeld – Farewell from Home", "Wellenfeld –  Views from Saturn", "Wellenfeld – End of Scientific Activity", "The Rosen Corporation – Singularity", "The Rosen Corporation – The Vast Ocean", "Scyrynyx – Sentient", "Scyrynyx – Binary Lifeform", "Brainwork – The Epic Part", "Alba Ecstasy – Dragon's Flight", "Alba Ecstasy – Critical Zone", "Michael Whalen – Sacred Spaces", "Michael Whalen – The Pure and the Calm", "Johannes Schmoelling – Mountain Blue", "Johannes Schmoelling – Kaleidospoe", "Yaary & Scholl – Automata", "Yaary & Scholl – Singular Homology", "Adrian Earnshaw – Organics II", "Adrian Earnshaw – Organics III", "Adrian Earnshaw – Organics IV", "Jean Michel Jarre – Equinoxe Part 2", "Jean Michel Jarre – Equinoxe Part 3"], "/hans-prisma/superclean-dreammachine-week-40-2020/": ["Synth replicants - Time And Space", "Computerchemist – That Which Prevails", "Computerchemist – A Dali – Esque Dreamer", "Steen Chorchendorff Jorgensen – Let Me Cross Your Path", "Steen Chorchendorff Jorgensen – Keep The Direction", "Berlin Heritage – Leaving Behind", "Can Atilla - Waves Of Wheels", "Can Atilla - A New Life In Medresse", "Robert Schroeder – Secret Elements", "Thaneco ( Thanasis Oikonomopoulos ) & Romerium – Space Rituals", "Gert Emmens & Ruud Heij - Urban Decay Part 6", "Germind – In The Dawn Of Time", "Germind – Freediving", "Tim Blake – New Jerusalem"]};
+const SAVED_KEY='hp-shuffle-saved', PL_KEY='hp-shuffle-playlist';
+let tracklist=null, curIdx=-1, posTimer=null;
+let saved=[]; try{saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]')}catch(e){}
+const saveSaved=()=>{try{localStorage.setItem(SAVED_KEY,JSON.stringify(saved))}catch(e){}};
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=t=>{const h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s).padStart(2,'0')};
+const spUrl=q=>'https://open.spotify.com/search/'+encodeURIComponent(q);
+const titles=it=>(it.title||'').split(/\s*,\s*/).filter(Boolean);
+const niceArtist=it=>titleCaseIfUpper(stripParen(it.artist))||'';
+const songQ=(it,t)=>clean(stripParen(niceArtist(it))+' '+stripParen(t));
+const savedId=(it,t)=>(niceArtist(it)+' – '+t).toLowerCase();
+function isSaved(it,t){return saved.some(s=>s.id===savedId(it,t))}
+function toggleSave(it,t){const id=savedId(it,t);const i=saved.findIndex(s=>s.id===id);
+  if(i>=0)saved.splice(i,1); else saved.push({id,artist:niceArtist(it),title:stripParen(t),q:songQ(it,t),show:current?current.name:''});
+  saveSaved(); renderSaved(); renderTrack(); renderTL();}
+
+function songLinks(it){
+  const ts=titles(it); if(!ts.length) return '';
+  return ts.map(t=>`<span class="row" style="gap:6px"><a class="sp" href="${spUrl(songQ(it,t))}" target="_blank" rel="noopener">${esc(stripParen(t))}</a><button class="star${isSaved(it,t)?' on':''}" data-t="${esc(t)}" title="Bewaar dit nummer">${isSaved(it,t)?'&#9733;':'&#9734;'}</button></span>`).join('');
+}
+function bindStars(root,it){root.querySelectorAll('button.star').forEach(b=>b.onclick=e=>{e.stopPropagation();toggleSave(it,b.dataset.t)})}
+
+function renderTrack(){
+  const box=$('trackBox'), body=$('trackBody');
+  { const it = tracklist && tracklist.timed ? tracklist.items[curIdx] : null; const t = it && titles(it)[0];
+    const b=$('spBtn'); b.hidden = !current;
+    if (t) { b.href = spUrl(songQ(it,t)); b.classList.remove('off'); b.removeAttribute('aria-disabled'); b.textContent='Voeg toe in Spotify'; b.title = 'Zoek "'+songQ(it,t)+'" in Spotify en voeg het daar toe aan je playlist'; }
+    else { b.removeAttribute('href'); b.classList.add('off'); b.setAttribute('aria-disabled','true'); b.textContent='Spotify: geen nummer herkend';
+      b.title = !tracklist ? 'Deze show heeft geen tracklist in de commentaren' : (!tracklist.timed ? 'De tracklist van deze show heeft geen tijden, dus het huidige nummer is niet bekend' : 'Nog in de intro, het eerste nummer begint zo'); } }
+  if(!current){box.hidden=true;return}
+  box.hidden=false;
+  if(!tracklist){$('trackLabel').textContent='Speelt nu';body.innerHTML='<p class="muted">Voor deze show staat er geen tracklist in de commentaren op Mixcloud.</p>';return}
+  if(!tracklist.timed){$('trackLabel').textContent='Tracklist zonder tijden';body.innerHTML='<p class="muted">Deze show heeft een tracklist zonder tijdcodes, dus wat er precies nu speelt is niet bekend. Bekijk de volledige lijst hieronder.</p>';return}
+  const it=tracklist.items[curIdx];
+  if(!it){$('trackLabel').textContent='Speelt nu';body.innerHTML='<p class="muted">Intro &hellip;</p>';return}
+  $('trackLabel').textContent='Speelt nu · vanaf '+fmt(it.t);
+  body.innerHTML=`<div class="artist">${esc(niceArtist(it)||'Onbekende artiest')}</div>
+    <div class="songs">${songLinks(it)}</div>
+    ${it.album?`<div class="album">${esc(it.album)}</div>`:''}`;
+  bindStars(body,it);
+}
+function renderTL(){
+  const box=$('tlBox'), ol=$('tlList');
+  if(!tracklist){box.hidden=true;return}
+  box.hidden=false;
+  $('tlSummary').textContent=`Tracklist (${tracklist.items.length}${tracklist.timed?'':' · zonder tijden'}) · ${tracklist.src||('uit commentaar van '+tracklist.by)}`;
+  ol.innerHTML='';
+  tracklist.items.forEach((it,i)=>{
+    const li=document.createElement('li'); if(i===curIdx) li.classList.add('cur');
+    li.innerHTML=`${it.t!=null?`<button class="tm" title="Spring hierheen">${fmt(it.t)}</button>`:''}
+      <span class="tx"><b>${esc(niceArtist(it))}</b>${niceArtist(it)?' — ':''}${esc(stripParen(it.title))}${it.album?` <span class="muted">(${esc(it.album)})</span>`:''}</span>
+      <span class="songs row" style="gap:6px">${songLinks(it)}</span>`;
+    const tm=li.querySelector('.tm'); if(tm) tm.onclick=()=>{ if(widget) widget.seek(it.t); };
+    bindStars(li,it); ol.appendChild(li);
+  });
+}
+function renderSaved(){
+  const ul=$('savedList'); ul.innerHTML=''; $('savedEmpty').hidden=saved.length>0;
+  saved.forEach((s,i)=>{const li=document.createElement('li');
+    li.innerHTML=`<span class="t"><b>${esc(s.artist)}</b> — ${esc(s.title)}<br><span class="muted">${esc(s.show)}</span></span>
+      <a class="sp" href="${spUrl(s.q)}" target="_blank" rel="noopener">Spotify</a><button class="star on" title="Verwijder">&#9733;</button>`;
+    li.querySelector('button').onclick=()=>{saved.splice(i,1);saveSaved();renderSaved();renderTrack();renderTL()};
+    ul.appendChild(li)});
+}
+async function loadTracklist(s){
+  tracklist=null; curIdx=-1; renderTrack(); renderTL();
+  try{
+    const j=await jsonp('https://api.mixcloud.com'+s.key+'comments/?limit=100');
+    if(current!==s) return;
+    tracklist=bestTracklist(j.data||[]);
+  }catch(e){}
+  if(current!==s) return;
+  // Aanvulling: tracklists die Hans op Facebook postte (groep 'Bandcamp - Ambient, Berlin School, Space Music')
+  if((!tracklist || !tracklist.timed) && FB_TRACKLISTS[s.key]){
+    tracklist={timed:false, items:FB_TRACKLISTS[s.key].map(l=>({t:null,...parseTrackText(l,''),raw:l})), by:'Hans Prisma', src:'uit Hans\' Facebook-post'};
+  }
+  try{
+  }catch(e){}
+  renderTrack(); renderTL();
+}
+function startPos(){
+  clearInterval(posTimer);
+  posTimer=setInterval(async()=>{
+    if(!widget) return;
+    try{const p=await widget.getPosition();
+      if(p>5 && current && !pendingSeek){ try{localStorage.setItem(RESUME_KEY,JSON.stringify({key:current.key,pos:Math.floor(p)}))}catch(e){} }
+      if(!tracklist||!tracklist.timed) return;
+      let i=-1;
+      tracklist.items.forEach((it,k)=>{if(it.t<=p+1) i=k});
+      if(i!==curIdx){curIdx=i;renderTrack();renderTL();}
+    }catch(e){}
+  },2000);
+}
+$('copySaved').onclick=async()=>{const txt=saved.map(s=>s.artist+' – '+s.title).join('\n');
+  try{await navigator.clipboard.writeText(txt);$('copyMsg').textContent='Gekopieerd'}catch(e){$('copyMsg').textContent='Kopiëren lukte niet'}};
+$('clearSaved').onclick=()=>{if(!saved.length)return; if($('clearSaved').dataset.sure){saved=[];saveSaved();renderSaved();renderTrack();renderTL();delete $('clearSaved').dataset.sure;$('clearSaved').textContent='Wis lijst'} else {$('clearSaved').dataset.sure=1;$('clearSaved').textContent='Zeker? Klik nogmaals'}};
+renderSaved();
+
+// Volume: onthouden per browser en toepassen op de Mixcloud-speler
+const VOL_KEY='hp-shuffle-volume';
+(function(){ let v=80; try{ const x=parseInt(localStorage.getItem(VOL_KEY),10); if(!isNaN(x)) v=x; }catch(e){}
+  $('vol').value=v; $('volVal').textContent=v+'%';
+  $('vol').oninput=()=>{ const v=+$('vol').value; $('volVal').textContent=v+'%'; try{localStorage.setItem(VOL_KEY,String(v))}catch(e){}; if(widget) applyVolume(widget); };
+})();
+function applyVolume(w){ try{ w.setVolume(Math.max(0,Math.min(1,(+$('vol').value)/100))); }catch(e){} }
+// Lijst met alle shows: open/dicht onthouden
+(function(){ try{ $('listBox').open = localStorage.getItem('hp-shuffle-listopen')==='1'; }catch(e){}
+  $('listBox').addEventListener('toggle',()=>{ try{localStorage.setItem('hp-shuffle-listopen',$('listBox').open?'1':'0')}catch(e){} }); })();
+load();
+</script>
+</body>
+</html>

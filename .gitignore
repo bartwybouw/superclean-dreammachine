@@ -1,0 +1,12 @@
+# Interne werkcontext (niet publiceren)
+CLAUDE.md
+
+# Oude versies / build-output
+Archived/
+app/build/
+
+# Gedownloade / gegenereerde icoon-assets (build.sh haalt de foto live op)
+app/assets/
+
+# macOS
+.DS_Store
