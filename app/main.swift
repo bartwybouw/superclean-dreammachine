@@ -48,10 +48,6 @@ func appVersion() -> String {
     (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "?"
 }
 
-func appBuild() -> String {
-    (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String) ?? "?"
-}
-
 let kRepoURL = "https://github.com/bartwybouw/superclean-dreammachine"
 
 enum PlayState { case idle, playing, paused }
@@ -374,7 +370,9 @@ final class Controller: NSObject, WKUIDelegate, WKNavigationDelegate, NSWindowDe
         NSApp.orderFrontStandardAboutPanel(options: [
             NSApplication.AboutPanelOptionKey.applicationName: kAppName,
             NSApplication.AboutPanelOptionKey.applicationVersion: appVersion(),
-            NSApplication.AboutPanelOptionKey.version: appBuild(),
+            // Lege build-versie: geen "(5)" achter het versienummer. Het buildnummer
+            // (CFBundleVersion) blijft in Info.plist, Sparkle heeft het nodig.
+            NSApplication.AboutPanelOptionKey.version: "",
             NSApplication.AboutPanelOptionKey.credits: aboutCredits(),
             NSApplication.AboutPanelOptionKey(rawValue: "Copyright"):
                 "Mixcloud-archief van Hans Prisma · Superclean Dreammachine",
