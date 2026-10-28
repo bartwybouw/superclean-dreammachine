@@ -18,8 +18,15 @@ VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP_
 
 # --- 1. App bouwen (build.sh bouwt + installeert; we gebruiken de build-kopie) --
 bash "$APP_DIR/build.sh"
-APP_SRC="$APP_DIR/build/$APP_NAME.app"
-[ -d "$APP_SRC" ] || { echo "App niet gevonden: $APP_SRC"; exit 1; }
+BUILT="$APP_DIR/build/$APP_NAME.app"
+[ -d "$BUILT" ] || { echo "App niet gevonden: $BUILT"; exit 1; }
+
+# Ondertekenen/verpakken in een tijdelijke map buiten iCloud Drive: iCloud zet anders
+# FinderInfo-attributen terug en dan weigert codesign ("detritus not allowed").
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/scd-dmg.XXXXXX")"
+trap 'rm -rf "$WORK"' EXIT
+ditto --norsrc --noextattr "$BUILT" "$WORK/$APP_NAME.app"
+APP_SRC="$WORK/$APP_NAME.app"
 
 # --- 2. Developer ID + notarisatie? ------------------------------------------
 # SIGN_ID: certificaatnaam (of auto-detectie van het eerste Developer ID Application-cert).
@@ -36,11 +43,12 @@ fi
 if [ "$DO_NOTARIZE" = "1" ]; then
     echo "==> Ondertekenen met Developer ID: $SIGN_ID"
     # Hardened runtime + veilige tijdstempel zijn vereist voor notarisatie.
+    xattr -cr "$APP_SRC"
     codesign --force --options runtime --timestamp --sign "$SIGN_ID" "$APP_SRC"
     codesign --verify --strict --verbose=1 "$APP_SRC"
 
     echo "==> Notariseren (kan 1–3 min duren) ..."
-    ZIP="$APP_DIR/build/scd-notarize.zip"
+    ZIP="$WORK/scd-notarize.zip"
     rm -f "$ZIP"
     ditto -c -k --keepParent "$APP_SRC" "$ZIP"
     xcrun notarytool submit "$ZIP" --keychain-profile "$NOTARY_PROFILE" --wait
@@ -55,7 +63,7 @@ fi
 
 # --- 3. Staging: .app + snelkoppeling naar /Applications ----------------------
 echo "==> DMG samenstellen ..."
-DMG_DIR="$APP_DIR/build/dmg"
+DMG_DIR="$WORK/dmg"
 rm -rf "$DMG_DIR"; mkdir -p "$DMG_DIR"
 cp -R "$APP_SRC" "$DMG_DIR/"
 ln -s /Applications "$DMG_DIR/Applications"
@@ -68,9 +76,12 @@ if [ -f "$OUT" ]; then
 fi
 hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_DIR" -ov -format UDZO "$OUT" >/dev/null
 
-# De DMG zelf ook stapelen, zodat de notarisatie offline herkend wordt.
+# De DMG zelf ook ondertekenen, notariseren en stapelen.
 if [ "$DO_NOTARIZE" = "1" ]; then
-    xcrun stapler staple "$OUT" || echo "   (stapler op DMG overgeslagen — app is wel gestapled)"
+    echo "==> DMG ondertekenen + notariseren ..."
+    codesign --force --timestamp --sign "$SIGN_ID" "$OUT"
+    xcrun notarytool submit "$OUT" --keychain-profile "$NOTARY_PROFILE" --wait
+    xcrun stapler staple "$OUT"
 fi
 
 echo ""
