@@ -8,5 +8,8 @@ app/build/
 # Gedownloade / gegenereerde icoon-assets (build.sh haalt de foto live op)
 app/assets/
 
+# Gebouwde DMG's (worden als Release-bijlage verspreid, niet in git)
+*.dmg
+
 # macOS
 .DS_Store

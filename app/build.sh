@@ -34,6 +34,10 @@ sed "s#__HPS_PROJECT_DIR__#$PROJECT_DIR#g" \
     "$APP_DIR/Info.plist" > "$APP_BUNDLE/Contents/Info.plist"
 printf 'APPL????' > "$APP_BUNDLE/Contents/PkgInfo"
 
+# HTML mee in de app (Contents/Resources): zo werkt de app ook zelfstandig (DMG),
+# los van de projectmap. Op het dev-toestel krijgt de map-kopie voorrang (zie main.swift).
+cp "$PROJECT_DIR/hans-prisma-shuffle.html" "$APP_BUNDLE/Contents/Resources/"
+
 # --- 3. Icoon ----------------------------------------------------------------
 # Profielfoto van Hans ophalen (eenmalig) en naar AppIcon.icns omzetten.
 ICON_SRC="$ASSETS_DIR/hans-600.png"

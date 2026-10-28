@@ -34,6 +34,16 @@ Een klein, zelfstandig programma *Superclean Dreammachine.app* met eigen icoon i
 geen browservenster nodig, reageert op de **media-toetsen** van je toetsenbord en toont de
 afspeelstatus op het Dock-icoon.
 
+**Makkelijkst — download de kant-en-klare app:**
+ga naar **[Releases](../../releases/latest)**, download de `.dmg`, open ze en sleep
+*Superclean Dreammachine* naar **Programma's**.
+
+> ⚠️ **Eerste keer openen.** De app is ad-hoc gesigneerd maar niet genotariseerd (geen betaald
+> Apple Developer-account), dus macOS waarschuwt bij de eerste start. Open ze één keer met
+> **rechtsklik (of Ctrl+klik) op de app → Open → Open**. Daarna werkt gewoon dubbelklikken.
+> (Alternatief in Terminal: `xattr -dr com.apple.quarantine "/Applications/Superclean Dreammachine.app"`.)
+
+**Of bouw ze zelf.**
 **Vereisten:** macOS + Apple Command Line Tools. Nog niet geïnstalleerd? Eenmalig:
 
 ```bash
@@ -65,6 +75,7 @@ dat meteen zichtbaar (⌘R om te herladen). ⌘Q sluit af; het "Over"-menu toont
 | `app/makeicon.swift` | Genereert het app-icoon uit Hans' studiofoto. |
 | `app/Info.plist` | App-metadata; `build.sh` vult het projectpad in. |
 | `app/build.sh` | Bouwt, signeert en installeert de app. |
+| `app/build-dmg.sh` | Bouwt de app én verpakt ze in een deelbare `.dmg`. |
 
 ## In memoriam
 

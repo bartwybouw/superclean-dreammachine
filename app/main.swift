@@ -33,7 +33,14 @@ func projectDirURL() -> URL {
 }
 
 func htmlURL() -> URL {
-    projectDirURL().appendingPathComponent(kHtmlFilename)
+    // Dev: live uit de projectmap, zodat HTML-wijzigingen meteen zichtbaar zijn.
+    let dev = projectDirURL().appendingPathComponent(kHtmlFilename)
+    if FileManager.default.fileExists(atPath: dev.path) { return dev }
+    // Distributie (DMG): kopie die in de app zelf zit (Contents/Resources).
+    if let bundled = Bundle.main.url(forResource: "hans-prisma-shuffle", withExtension: "html") {
+        return bundled
+    }
+    return dev
 }
 
 func appVersion() -> String {
@@ -189,7 +196,7 @@ final class Controller: NSObject, WKUIDelegate, WKNavigationDelegate, NSWindowDe
     private func loadPage() {
         setState(.idle)   // verse pagina: nog niets aan het spelen
         let html = htmlURL()
-        let dir = projectDirURL()
+        let dir = html.deletingLastPathComponent()
         guard FileManager.default.fileExists(atPath: html.path) else {
             let alert = NSAlert()
             alert.messageText = "Pagina niet gevonden"
