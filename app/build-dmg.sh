@@ -32,10 +32,20 @@ APP_SRC="$WORK/$APP_NAME.app"
 /usr/libexec/PlistBuddy -c "Set :HPSProjectDir ''" "$APP_SRC/Contents/Info.plist"
 
 # --- 2. Developer ID + notarisatie? ------------------------------------------
-# SIGN_ID: certificaatnaam (of auto-detectie van het eerste Developer ID Application-cert).
+# SIGN_ID: certificaatnaam. Standaard het meest recent uitgegeven Developer ID Application-
+# certificaat, zodat na een naamswijziging (Pixerang BVBA → Bamati BV) automatisch het nieuwe
+# wordt gebruikt. Overschrijven kan met SCD_SIGN_ID="Developer ID Application: …".
 # NOTARY_PROFILE: naam van het notarytool-keychainprofiel (zie onderaan).
-SIGN_ID="${SCD_SIGN_ID:-$(security find-identity -v -p codesigning 2>/dev/null \
-    | awk -F'"' '/Developer ID Application/{print $2; exit}')}"
+newest_devid() {
+    security find-identity -v -p codesigning 2>/dev/null \
+        | awk -F'"' '/Developer ID Application/{print $2}' | sort -u \
+        | while IFS= read -r name; do
+            start="$(security find-certificate -c "$name" -p 2>/dev/null \
+                | openssl x509 -noout -startdate 2>/dev/null | cut -d= -f2)"
+            [ -n "$start" ] && echo "$(date -j -f "%b %e %T %Y %Z" "$start" +%s 2>/dev/null || echo 0)|$name"
+          done | sort -t'|' -k1,1n | tail -1 | cut -d'|' -f2-
+}
+SIGN_ID="${SCD_SIGN_ID:-$(newest_devid)}"
 NOTARY_PROFILE="${SCD_NOTARY_PROFILE:-scd-notary}"
 
 DO_NOTARIZE=0
