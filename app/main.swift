@@ -14,6 +14,11 @@ import Cocoa
 import WebKit
 import MediaPlayer
 import Sparkle
+import os
+
+// Logboek voor mediatoetsen, afspeelstatus en standby. Uitlezen met:
+//   log show --last 2h --predicate 'subsystem == "be.bamati.superclean-dreammachine"'
+let mediaLog = Logger(subsystem: "be.bamati.superclean-dreammachine", category: "media")
 
 // --- Configuratie ------------------------------------------------------------
 
@@ -97,6 +102,7 @@ final class Controller: NSObject, WKUIDelegate, WKNavigationDelegate, NSWindowDe
         baseIcon = NSApp.applicationIconImage ?? NSImage()
         buildMenu()
         setupRemoteCommands()
+        observeWake()
         makeWindow()
         loadPage()
     }
@@ -107,23 +113,101 @@ final class Controller: NSObject, WKUIDelegate, WKNavigationDelegate, NSWindowDe
     private func setupRemoteCommands() {
         let cc = MPRemoteCommandCenter.shared()
         cc.playCommand.isEnabled = true
-        cc.playCommand.addTarget { [weak self] _ in self?.dockPlay(); return .success }
+        cc.playCommand.addTarget { [weak self] _ in
+            mediaLog.notice("toets: play"); self?.dockPlay(); return .success }
         cc.pauseCommand.isEnabled = true
-        cc.pauseCommand.addTarget { [weak self] _ in self?.dockPause(); return .success }
+        cc.pauseCommand.addTarget { [weak self] _ in
+            mediaLog.notice("toets: pause"); self?.dockPause(); return .success }
         cc.togglePlayPauseCommand.isEnabled = true
-        cc.togglePlayPauseCommand.addTarget { [weak self] _ in self?.toggle(); return .success }
+        cc.togglePlayPauseCommand.addTarget { [weak self] _ in
+            mediaLog.notice("toets: play/pause"); self?.toggle(); return .success }
         cc.stopCommand.isEnabled = true
-        cc.stopCommand.addTarget { [weak self] _ in self?.dockPause(); return .success }
+        cc.stopCommand.addTarget { [weak self] _ in
+            mediaLog.notice("toets: stop"); self?.dockPause(); return .success }
         // Sommige toetsenborden sturen vorige/volgende → volgende = willekeurige show.
         cc.nextTrackCommand.isEnabled = true
-        cc.nextTrackCommand.addTarget { [weak self] _ in self?.dockNext(); return .success }
+        cc.nextTrackCommand.addTarget { [weak self] _ in
+            mediaLog.notice("toets: volgende"); self?.dockNext(); return .success }
         cc.previousTrackCommand.isEnabled = true
-        cc.previousTrackCommand.addTarget { [weak self] _ in self?.dockNext(); return .success }
+        cc.previousTrackCommand.addTarget { [weak self] _ in
+            mediaLog.notice("toets: vorige"); self?.dockNext(); return .success }
         MPNowPlayingInfoCenter.default().playbackState = .stopped
     }
 
     @objc func toggle() {
-        if state == .playing { dockPause() } else { dockPlay() }
+        // Vraag de echte status op bij de widget in plaats van op `state` te vertrouwen:
+        // na standby kan die achterlopen (muziek gestopt zonder pause-event).
+        widgetIsPaused { [weak self] paused in
+            guard let self else { return }
+            mediaLog.notice("toggle: widget \(Self.describe(paused), privacy: .public)")
+            // Geen antwoord van de widget → terugvallen op de laatst gekende status.
+            let playing = paused.map { !$0 } ?? (self.state == .playing)
+            if playing { self.dockPause() } else { self.dockPlay() }
+        }
+    }
+
+    /// Vraagt de Mixcloud-widget of ze gepauzeerd is. nil = geen widget geladen,
+    /// of geen antwoord binnen 3 seconden.
+    private func widgetIsPaused(_ done: @escaping (Bool?) -> Void) {
+        guard let webView else { done(nil); return }
+        let js = """
+        if (typeof widget === 'undefined' || !widget) return 'none';
+        if (typeof widget.getIsPaused !== 'function') return 'no-getIsPaused';
+        return await Promise.race([
+          widget.getIsPaused().then(p => p ? 'paused' : 'playing'),
+          new Promise(res => setTimeout(() => res('timeout'), 3000))
+        ]);
+        """
+        webView.callAsyncJavaScript(js, arguments: [:], in: nil, in: .page) { result in
+            switch result {
+            case .success(let value):
+                switch value as? String {
+                case "paused":  done(true)
+                case "playing": done(false)
+                default:
+                    mediaLog.notice("widget-status: \(String(describing: value), privacy: .public)")
+                    done(nil)
+                }
+            case .failure(let error):
+                mediaLog.error("widget-status mislukt: \(error.localizedDescription, privacy: .public)")
+                done(nil)
+            }
+        }
+    }
+
+    private static func describe(_ paused: Bool?) -> String {
+        switch paused {
+        case true?:  return "gepauzeerd"
+        case false?: return "speelt"
+        case nil:    return "onbekend"
+        }
+    }
+
+    // --- Standby ----------------------------------------------------------------
+    // Na het ontwaken kan de afspeelstatus achterlopen en kan macOS de mediatoetsen aan
+    // een andere app geven. We synchroniseren dan met de widget en melden ons opnieuw
+    // aan als "Now Playing".
+    private func observeWake() {
+        let nc = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didWakeNotification, NSWorkspace.screensDidWakeNotification] {
+            nc.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                mediaLog.notice("ontwaakt: \(note.name.rawValue, privacy: .public)")
+                // Even wachten tot audio en netwerk terug zijn.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self?.resyncState() }
+            }
+        }
+    }
+
+    private func resyncState() {
+        widgetIsPaused { [weak self] paused in
+            guard let self else { return }
+            mediaLog.notice("resync: widget \(Self.describe(paused), privacy: .public)")
+            switch paused {
+            case true?:  self.setState(.paused)
+            case false?: self.setState(.playing)
+            case nil:    self.updateNowPlaying()
+            }
+        }
     }
 
     @objc func dockNext() {
@@ -305,6 +389,7 @@ final class Controller: NSObject, WKUIDelegate, WKNavigationDelegate, NSWindowDe
     func userContentController(_ controller: WKUserContentController,
                                didReceive message: WKScriptMessage) {
         guard message.name == "scd", let s = message.body as? String else { return }
+        mediaLog.notice("widget-event: \(s, privacy: .public)")
         switch s {
         case "playing": setState(.playing)
         case "paused":  setState(.paused)
