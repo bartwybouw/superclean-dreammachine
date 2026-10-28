@@ -46,9 +46,18 @@ rm -f "$BUILD_DIR/$EXEC_NAME-arm64" "$BUILD_DIR/$EXEC_NAME-x86_64"
 mkdir -p "$APP_BUNDLE/Contents/Frameworks"
 ditto "$SPARKLE_DIR/Sparkle.framework" "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
 
-# --- 2. Info.plist (projectpad invullen) -------------------------------------
-echo "==> Info.plist schrijven ..."
-sed "s#__HPS_PROJECT_DIR__#$PROJECT_DIR#g" \
+# --- 2. Info.plist -----------------------------------------------------------
+# Standaard gebruikt de app de ingebouwde HTML (geen toegang tot ~/Documents nodig).
+# Dev-modus (SCD_DEV=1 bash app/build.sh): HTML live uit de projectmap laden, zodat
+# wijzigingen meteen zichtbaar zijn met ⌘R. macOS vraagt dan wel om toegang tot de map.
+if [ "${SCD_DEV:-0}" = "1" ]; then
+    echo "==> Info.plist schrijven (dev-modus: HTML live uit $PROJECT_DIR) ..."
+    LIVE_DIR="$PROJECT_DIR"
+else
+    echo "==> Info.plist schrijven ..."
+    LIVE_DIR=""
+fi
+sed "s#__HPS_PROJECT_DIR__#$LIVE_DIR#g" \
     "$APP_DIR/Info.plist" > "$APP_BUNDLE/Contents/Info.plist"
 printf 'APPL????' > "$APP_BUNDLE/Contents/PkgInfo"
 

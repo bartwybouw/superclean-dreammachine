@@ -68,8 +68,15 @@ ad-hoc en kopieert *Superclean Dreammachine.app* naar `/Applications`. Start daa
 open "/Applications/Superclean Dreammachine.app"
 ```
 
-De app laadt `hans-prisma-shuffle.html` **live uit deze map**, dus wijzig je de HTML, dan is
-dat meteen zichtbaar (⌘R om te herladen). ⌘Q sluit af; het "Over"-menu toont de versie.
+De app gebruikt de HTML die bij het bouwen in de app wordt gestopt. Werk je zelf aan
+`hans-prisma-shuffle.html`, bouw dan in **dev-modus**: dan laadt de app de HTML live uit deze
+map en zie je wijzigingen meteen met ⌘R (macOS vraagt dan om toegang tot die map):
+
+```bash
+SCD_DEV=1 bash app/build.sh
+```
+
+⌘Q sluit af; het "Over"-menu toont de versie.
 
 ## Hoe het in elkaar zit
 
