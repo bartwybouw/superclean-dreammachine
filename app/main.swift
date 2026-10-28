@@ -48,6 +48,12 @@ func appVersion() -> String {
     (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "?"
 }
 
+func appBuild() -> String {
+    (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String) ?? "?"
+}
+
+let kRepoURL = "https://github.com/bartwybouw/superclean-dreammachine"
+
 enum PlayState { case idle, playing, paused }
 
 // --- Hoofdcontroller ---------------------------------------------------------
@@ -367,11 +373,37 @@ final class Controller: NSObject, WKUIDelegate, WKNavigationDelegate, NSWindowDe
     @objc private func showAbout() {
         NSApp.orderFrontStandardAboutPanel(options: [
             NSApplication.AboutPanelOptionKey.applicationName: kAppName,
-            NSApplication.AboutPanelOptionKey.version: appVersion(),
+            NSApplication.AboutPanelOptionKey.applicationVersion: appVersion(),
+            NSApplication.AboutPanelOptionKey.version: appBuild(),
+            NSApplication.AboutPanelOptionKey.credits: aboutCredits(),
             NSApplication.AboutPanelOptionKey(rawValue: "Copyright"):
                 "Mixcloud-archief van Hans Prisma · Superclean Dreammachine",
         ])
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    /// Credits in het Over-venster: maker, eerbetoon en een klikbare link naar het project.
+    private func aboutCredits() -> NSAttributedString {
+        let centered = NSMutableParagraphStyle()
+        centered.alignment = .center
+        let base: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11),
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: centered,
+        ]
+        var bold = base
+        bold[.font] = NSFont.boldSystemFont(ofSize: 11)
+        var muted = base
+        muted[.foregroundColor] = NSColor.secondaryLabelColor
+        var link = base
+        link[.link] = URL(string: kRepoURL)
+
+        let s = NSMutableAttributedString()
+        s.append(NSAttributedString(string: "Gemaakt door ", attributes: base))
+        s.append(NSAttributedString(string: "Bart Wybouw", attributes: bold))
+        s.append(NSAttributedString(string: "\nTer nagedachtenis aan Hans Prisma\n\n", attributes: muted))
+        s.append(NSAttributedString(string: "github.com/bartwybouw/superclean-dreammachine", attributes: link))
+        return s
     }
 
     @objc private func reloadPage() {
