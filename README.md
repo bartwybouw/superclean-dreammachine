@@ -39,9 +39,16 @@ ga naar **[Releases](../../releases/latest)**, download de `.dmg`, open ze en sl
 *Superclean Dreammachine* naar **Programma's**.
 
 > ⚠️ **Eerste keer openen.** De app is ad-hoc gesigneerd maar niet genotariseerd (geen betaald
-> Apple Developer-account), dus macOS waarschuwt bij de eerste start. Open ze één keer met
-> **rechtsklik (of Ctrl+klik) op de app → Open → Open**. Daarna werkt gewoon dubbelklikken.
-> (Alternatief in Terminal: `xattr -dr com.apple.quarantine "/Applications/Superclean Dreammachine.app"`.)
+> Apple Developer-account), dus macOS blokkeert de eerste start met de melding *"Apple kon niet
+> verifiëren dat … geen malware bevat"*. Zo open je ze toch (kies **niet** "Verplaats naar
+> prullenmand"):
+>
+> 1. Dubbelklik de app → in de melding klik **Gereed**.
+> 2. Ga naar  **Systeeminstellingen → Privacy en beveiliging**, scroll naar onder, en klik
+>    bij *"Superclean Dreammachine werd geblokkeerd"* op **Toch openen** → bevestig.
+>
+> Daarna werkt gewoon dubbelklikken. Liever via Terminal (doet hetzelfde in één keer):
+> `xattr -dr com.apple.quarantine "/Applications/Superclean Dreammachine.app"`
 
 **Of bouw ze zelf.**
 **Vereisten:** macOS + Apple Command Line Tools. Nog niet geïnstalleerd? Eenmalig:
