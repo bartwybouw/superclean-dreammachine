@@ -8,6 +8,9 @@ app/build/
 # Gedownloade / gegenereerde icoon-assets (build.sh haalt de foto live op)
 app/assets/
 
+# Sparkle-framework (fetch-sparkle.sh haalt een vastgepinde, gecontroleerde versie op)
+app/vendor/
+
 # Gebouwde DMG's (worden als Release-bijlage verspreid, niet in git)
 *.dmg
 

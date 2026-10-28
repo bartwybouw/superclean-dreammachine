@@ -13,6 +13,7 @@
 import Cocoa
 import WebKit
 import MediaPlayer
+import Sparkle
 
 // --- Configuratie ------------------------------------------------------------
 
@@ -55,6 +56,7 @@ final class Controller: NSObject, WKUIDelegate, WKNavigationDelegate, NSWindowDe
                         WKScriptMessageHandler {
     var window: NSWindow!
     var webView: WKWebView!
+    var updaterController: SPUStandardUpdaterController?   // Sparkle (gezet door AppDelegate)
     var baseIcon: NSImage = NSImage()        // het statische app-icoon (3D-knop)
     var state: PlayState = .idle
 
@@ -322,6 +324,10 @@ final class Controller: NSObject, WKUIDelegate, WKNavigationDelegate, NSWindowDe
         let about = appMenu.addItem(
             withTitle: "Over \(kAppName)", action: #selector(showAbout), keyEquivalent: "")
         about.target = self
+        let updates = appMenu.addItem(
+            withTitle: "Zoek naar updates…",
+            action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
+        updates.target = updaterController
         appMenu.addItem(.separator())
         appMenu.addItem(
             withTitle: "Verberg \(kAppName)",
@@ -396,8 +402,13 @@ final class Controller: NSObject, WKUIDelegate, WKNavigationDelegate, NSWindowDe
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let controller = Controller()
+    // Sparkle: controleert dagelijks de appcast (SUFeedURL in Info.plist) en installeert
+    // updates die met de EdDSA-sleutel (SUPublicEDKey) ondertekend zijn.
+    let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        controller.updaterController = updaterController
         controller.start()
     }
 

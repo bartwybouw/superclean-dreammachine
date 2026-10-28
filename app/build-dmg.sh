@@ -18,7 +18,7 @@ VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP_
 
 # --- 1. App bouwen (build.sh bouwt + installeert; we gebruiken de build-kopie) --
 bash "$APP_DIR/build.sh"
-BUILT="$APP_DIR/build/$APP_NAME.app"
+BUILT="${SCD_BUILD_DIR:-$HOME/Library/Caches/superclean-dreammachine/build}/$APP_NAME.app"
 [ -d "$BUILT" ] || { echo "App niet gevonden: $BUILT"; exit 1; }
 
 # Ondertekenen/verpakken in een tijdelijke map buiten iCloud Drive: iCloud zet anders
@@ -27,6 +27,9 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/scd-dmg.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 ditto --norsrc --noextattr "$BUILT" "$WORK/$APP_NAME.app"
 APP_SRC="$WORK/$APP_NAME.app"
+
+# Distributiekopie: geen lokaal projectpad meegeven; de app gebruikt dan de ingebouwde HTML.
+/usr/libexec/PlistBuddy -c "Set :HPSProjectDir ''" "$APP_SRC/Contents/Info.plist"
 
 # --- 2. Developer ID + notarisatie? ------------------------------------------
 # SIGN_ID: certificaatnaam (of auto-detectie van het eerste Developer ID Application-cert).
@@ -43,9 +46,7 @@ fi
 if [ "$DO_NOTARIZE" = "1" ]; then
     echo "==> Ondertekenen met Developer ID: $SIGN_ID"
     # Hardened runtime + veilige tijdstempel zijn vereist voor notarisatie.
-    xattr -cr "$APP_SRC"
-    codesign --force --options runtime --timestamp --sign "$SIGN_ID" "$APP_SRC"
-    codesign --verify --strict --verbose=1 "$APP_SRC"
+    bash "$APP_DIR/sign-devid.sh" "$APP_SRC" "$SIGN_ID"
 
     echo "==> Notariseren (kan 1–3 min duren) ..."
     ZIP="$WORK/scd-notarize.zip"

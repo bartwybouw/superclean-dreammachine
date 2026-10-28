@@ -15,13 +15,18 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.3</string>
+	<string>1.4</string>
 	<key>CFBundleVersion</key>
-	<string>4</string>
+	<string>5</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>nl</string>
+	<!-- Laat frameworks (Sparkle) de taal van de gebruiker volgen. -->
+	<key>CFBundleAllowMixedLocalizations</key>
+	<true/>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>12.0</string>
+	<string>13.0</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSPrincipalClass</key>
@@ -31,5 +36,14 @@
 	<!-- Pad naar de projectmap met hans-prisma-shuffle.html; door build.sh ingevuld. -->
 	<key>HPSProjectDir</key>
 	<string>__HPS_PROJECT_DIR__</string>
+	<!-- Sparkle-updates: feed, publieke EdDSA-sleutel, dagelijkse automatische controle. -->
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/bartwybouw/superclean-dreammachine/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>nRKRVOl+g6dnonGMUH85PNdt5DkSn1VeLWJAOghKZWE=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
 </dict>
 </plist>

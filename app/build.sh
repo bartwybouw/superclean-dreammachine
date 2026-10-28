@@ -8,7 +8,9 @@ set -euo pipefail
 # --- Paden -------------------------------------------------------------------
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"      # .../Hans-Prisma-Shuffle/app
 PROJECT_DIR="$(cd "$APP_DIR/.." && pwd)"                      # .../Hans-Prisma-Shuffle
-BUILD_DIR="$APP_DIR/build"
+# Bouwen buiten iCloud Drive: iCloud zet anders FinderInfo-attributen op de bestanden
+# en dan weigert codesign ("resource fork, Finder information ... not allowed").
+BUILD_DIR="${SCD_BUILD_DIR:-$HOME/Library/Caches/superclean-dreammachine/build}"
 ASSETS_DIR="$APP_DIR/assets"
 
 APP_NAME="Superclean Dreammachine"
@@ -22,11 +24,27 @@ echo "==> Bouwmap    : $BUILD_DIR"
 rm -rf "$BUILD_DIR"
 mkdir -p "$APP_BUNDLE/Contents/MacOS" "$APP_BUNDLE/Contents/Resources" "$ASSETS_DIR"
 
-# --- 1. Swift compileren -----------------------------------------------------
-echo "==> Swift compileren ..."
-swiftc -O \
-    -o "$APP_BUNDLE/Contents/MacOS/$EXEC_NAME" \
-    "$APP_DIR/main.swift"
+# --- 1. Swift compileren (universeel: Apple Silicon + Intel, macOS 13+) -------
+# macOS 13 is het laagste doel waarvoor de huidige Command Line Tools nog voor Intel linken.
+bash "$APP_DIR/fetch-sparkle.sh"
+SPARKLE_DIR="$(ls -d "$APP_DIR"/vendor/Sparkle-* | tail -1)"
+MIN_MACOS="13.0"
+
+echo "==> Swift compileren (arm64 + x86_64, macOS $MIN_MACOS+) ..."
+for ARCH in arm64 x86_64; do
+    swiftc -O -target "$ARCH-apple-macos$MIN_MACOS" \
+        -F "$SPARKLE_DIR" -framework Sparkle \
+        -Xlinker -rpath -Xlinker @executable_path/../Frameworks \
+        -o "$BUILD_DIR/$EXEC_NAME-$ARCH" \
+        "$APP_DIR/main.swift"
+done
+lipo -create -output "$APP_BUNDLE/Contents/MacOS/$EXEC_NAME" \
+    "$BUILD_DIR/$EXEC_NAME-arm64" "$BUILD_DIR/$EXEC_NAME-x86_64"
+rm -f "$BUILD_DIR/$EXEC_NAME-arm64" "$BUILD_DIR/$EXEC_NAME-x86_64"
+
+# Sparkle-framework insluiten (ditto behoudt de symlinks in het framework).
+mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+ditto "$SPARKLE_DIR/Sparkle.framework" "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
 
 # --- 2. Info.plist (projectpad invullen) -------------------------------------
 echo "==> Info.plist schrijven ..."
